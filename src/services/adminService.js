@@ -182,22 +182,22 @@ export const getUsersWithPendingNotes = async () => {
   }
 };
 // Approve a note for a specific user
-export const approveNoteForUser = async (userId, noteId) => {
+export const approveNoteForUser = async (userId, pendingNoteObject) => {
   try {
     const userRef = doc(db, "users", userId);
-    const noteRef = doc(db, "notes", noteId);
+    const noteRef = doc(db, "notes", pendingNoteObject.noteId);
 
     // Get note data to find uploader
     const noteSnap = await getDoc(noteRef);
     if (!noteSnap.exists()) {
-      throw new Error(`Note ${noteId} not found`);
+      throw new Error(`Note ${pendingNoteObject.noteId} not found`);
     }
     const noteData = noteSnap.data();
 
-    // Move note from pending to approved for user
+    // Remove the pending note object and add noteId to approved
     await updateDoc(userRef, {
-      pendingNotes: arrayRemove(noteId),
-      approvedNotes: arrayUnion(noteId),
+      pendingNotes: arrayRemove(pendingNoteObject),
+      approvedNotes: arrayUnion(pendingNoteObject.noteId),
       updatedAt: new Date()
     });
 
@@ -218,13 +218,13 @@ export const approveNoteForUser = async (userId, noteId) => {
 };
 
 // Deny a note for a specific user
-export const denyNoteForUser = async (userId, noteId, reason = "") => {
+export const denyNoteForUser = async (userId, pendingNoteObject, reason = "") => {
   try {
     const userRef = doc(db, "users", userId);
     
-    // Remove note from pending notes
+    // Remove the pending note object
     await updateDoc(userRef, {
-      pendingNotes: arrayRemove(noteId),
+      pendingNotes: arrayRemove(pendingNoteObject),
       updatedAt: new Date()
     });
     

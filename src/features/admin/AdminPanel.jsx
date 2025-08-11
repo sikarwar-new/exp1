@@ -48,8 +48,12 @@ function AdminPanel() {
     const { users } = await getUsersWithPendingNotes();
     setPendingUsers(users || []);
     
-    // Fetch details for all pending notes
-    const allPendingNoteIds = users.flatMap(user => user.pendingNotes || []);
+    // Extract noteIds from pending note objects
+    const allPendingNoteIds = users.flatMap(user => 
+      (user.pendingNotes || []).map(pendingNote => 
+        typeof pendingNote === 'object' ? pendingNote.noteId : pendingNote
+      )
+    );
     const uniqueNoteIds = [...new Set(allPendingNoteIds)];
     
     if (uniqueNoteIds.length > 0) {
@@ -134,20 +138,20 @@ function AdminPanel() {
   
 
   // Access handlers
-  const handleApproveUserNote = async (userId, noteId) => {
-    const actionKey = `${userId}-${noteId}`;
+  const handleApproveUserNote = async (userId, pendingNoteObject) => {
+    const actionKey = `${userId}-${pendingNoteObject.noteId}`;
     setPendingActionLoading(actionKey);
-    const { error } = await approveNoteForUser(userId, noteId);
+    const { error } = await approveNoteForUser(userId, pendingNoteObject);
     if (!error) {
       await fetchPendingUsers();
     }
     setPendingActionLoading(null);
   };
 
-  const handleDenyUserNote = async (userId, noteId) => {
-    const actionKey = `${userId}-${noteId}`;
+  const handleDenyUserNote = async (userId, pendingNoteObject) => {
+    const actionKey = `${userId}-${pendingNoteObject.noteId}`;
     setPendingActionLoading(actionKey);
-    const { error } = await denyNoteForUser(userId, noteId);
+    const { error } = await denyNoteForUser(userId, pendingNoteObject);
     if (!error) {
       await fetchPendingUsers();
     }

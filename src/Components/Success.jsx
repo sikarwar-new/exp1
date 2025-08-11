@@ -18,7 +18,7 @@ function Success() {
         const noteIds = purchasedItems.map(item => item.id).filter(Boolean);
 
         if (noteIds.length > 0) {
-          const { error } = await addToPendingNotes(user.uid, noteIds);
+          const { error } = await addToPendingNotes(user.uid, noteIds, paymentId);
 
           if (error) {
             console.error("Failed to add notes to pending:", error);

@@ -139,11 +139,20 @@ export const updateUserEligibility = async (userId, isEligible) => {
 };
 
 // Add purchased notes to user's pendingNotes array
-export const addToPendingNotes = async (userId, notes) => {
+export const addToPendingNotes = async (userId, noteIds, paymentId) => {
   try {
     const userRef = doc(db, "users", userId);
+    
+    // Create pending note objects with payment information
+    const pendingNoteObjects = noteIds.map(noteId => ({
+      noteId: noteId,
+      paymentId: paymentId,
+      purchasedAt: new Date(),
+      status: 'pending'
+    }));
+    
     await updateDoc(userRef, {
-      pendingNotes: arrayUnion(...notes),
+      pendingNotes: arrayUnion(...pendingNoteObjects),
       updatedAt: new Date(),
     });
     return { error: null };
@@ -208,9 +217,9 @@ export const listenToUserNotes = (userId, callback) => {
 };
 
 // Get approved notes details for profile page
-export const getApprovedNotesDetails = async (noteIds) => {
+export const getApprovedNotesDetails = async (noteIds = []) => {
   try {
-    if (!noteIds || noteIds.length === 0) {
+    if (noteIds.length === 0) {
       return { notes: [], error: null };
     }
 
@@ -226,14 +235,21 @@ export const getApprovedNotesDetails = async (noteIds) => {
     return { notes, error: null };
   } catch (error) {
     console.error("Error getting approved notes details:", error);
-    return { error: error.message };
+    return { notes: [], error: error.message };
   }
 };
 
 // Check if note is in user's pending or approved notes
-export const checkNoteStatus = (noteId, pendingNotes, approvedNotes) => {
+export const checkNoteStatus = (noteId, pendingNotes = [], approvedNotes = []) => {
+  // Check if noteId is in approvedNotes array (still simple strings)
   if (approvedNotes.includes(noteId)) return 'approved';
-  if (pendingNotes.includes(noteId)) return 'pending';
+  
+  // Check if noteId exists in pendingNotes array (now objects with noteId property)
+  const isPending = pendingNotes.some(pendingNote => 
+    typeof pendingNote === 'object' ? pendingNote.noteId === noteId : pendingNote === noteId
+  );
+  if (isPending) return 'pending';
+  
   return 'none';
 };
 
