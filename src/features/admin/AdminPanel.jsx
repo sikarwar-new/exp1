@@ -344,6 +344,7 @@ function AdminPanel() {
                   <tr>
                     <th className={thClassName}>User Email</th>
                     <th className={thClassName}>Display Name</th>
+                    <th className={thClassName}>Payment ID</th>
                     <th className={thClassName}>Pending Notes</th>
                     <th className={thClassName}>Actions</th>
                   </tr>
@@ -354,28 +355,51 @@ function AdminPanel() {
                       <td className={tdClassName}>{user.email}</td>
                       <td className={tdClassName}>{user.displayName}</td>
                       <td className={tdClassName}>
+                        <div className="space-y-1">
+                          {user.pendingNotes.map((pendingNote, index) => {
+                            const paymentId = typeof pendingNote === 'object' ? pendingNote.paymentId : 'N/A';
+                            return (
+                              <div key={index} className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
+                                {paymentId}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </td>
+                      <td className={tdClassName}>
                         <div className="space-y-2">
-                          {user.pendingNotes.map((noteId) => {
+                          {user.pendingNotes.map((pendingNote, index) => {
+                            const noteId = typeof pendingNote === 'object' ? pendingNote.noteId : pendingNote;
+                            const paymentId = typeof pendingNote === 'object' ? pendingNote.paymentId : 'N/A';
+                            const purchasedAt = typeof pendingNote === 'object' ? pendingNote.purchasedAt : null;
                             const note = pendingNotesDetails[noteId];
                             const actionKey = `${user.id}-${noteId}`;
                             return (
-                              <div key={noteId} className="border rounded p-2 bg-gray-50">
+                              <div key={index} className="border rounded p-2 bg-gray-50">
                                 <p className="font-medium text-sm">
                                   {note?.title || `Note ID: ${noteId}`}
                                 </p>
                                 <p className="text-xs text-gray-600">
                                   {note?.subject} - {note?.branch}
                                 </p>
+                                <p className="text-xs text-blue-600 font-mono">
+                                  Payment: {paymentId}
+                                </p>
+                                {purchasedAt && (
+                                  <p className="text-xs text-gray-500">
+                                    Purchased: {new Date(purchasedAt.toDate ? purchasedAt.toDate() : purchasedAt).toLocaleDateString()}
+                                  </p>
+                                )}
                                 <div className="flex gap-2 mt-2">
                                   <button
-                                    onClick={() => handleApproveUserNote(user.id, noteId)}
+                                    onClick={() => handleApproveUserNote(user.id, pendingNote)}
                                     disabled={pendingActionLoading === actionKey}
                                     className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
                                   >
                                     {pendingActionLoading === actionKey ? "..." : "Approve"}
                                   </button>
                                   <button
-                                    onClick={() => handleDenyUserNote(user.id, noteId)}
+                                    onClick={() => handleDenyUserNote(user.id, pendingNote)}
                                     disabled={pendingActionLoading === actionKey}
                                     className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
                                   >
