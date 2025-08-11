@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useCart } from "../contexts/CartContext";
 import { addToPendingNotes } from "../services/notesService";
 
 function Success() {
@@ -10,6 +11,7 @@ function Success() {
     purchasedItems: [],
   };
   const { user } = useAuth();
+  const { clearCart } = useCart();
 
   useEffect(() => {
     const addNotesToPending = async () => {
@@ -24,13 +26,15 @@ function Success() {
             console.error("Failed to add notes to pending:", error);
           } else {
             console.log("Notes added to pending successfully");
+            // Clear the cart after successful payment processing
+            clearCart();
           }
         }
       }
     };
 
     addNotesToPending();
-  }, [purchasedItems, paymentId, user]);
+  }, [purchasedItems, paymentId, user, clearCart]);
 
   if (purchasedItems.length === 0) {
     return (
